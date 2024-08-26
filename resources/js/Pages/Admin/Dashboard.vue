@@ -264,7 +264,7 @@ onMounted(() => {
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <apexchart type="line" :options="chartOptions" :series="series"></apexchart>
+                                    <apexchart type="area" :options="chartOptions" :series="series"></apexchart>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mt-4">
