@@ -94,7 +94,7 @@ const paid = (id) => {
                                                 <th>Violation</th>
                                                 <th>Penalty</th>
                                                 <th>Ticketed By</th>
-                                                <th>Vehicle</th>
+                                                <th>Vehicle & Plate No.</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -133,7 +133,8 @@ const paid = (id) => {
                                                     <span>{{ up.ticketedBy }}</span>
                                                 </td>
                                                 <td>
-                                                    {{ up.vehicle }}
+                                                    <div>{{ up.vehicle }}</div>
+                                                    <div class="fw-bold">{{ up.plateNumber }}</div>
                                                 </td>
                                                 <td>
                                                     <button class="btn btn-sm btn-success" @click="paid(up.id)">

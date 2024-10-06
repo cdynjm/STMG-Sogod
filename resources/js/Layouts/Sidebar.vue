@@ -104,7 +104,7 @@ onMounted(() => {
     <div class="logo-box mt-3 mb-3 d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center">
         <a href="#" class="logo-dark d-flex align-items-center">
-          <img src="/logo/stmg.png" class="logo-xl" alt="logo dark" style="width: 180px;" />
+          <img src="/logo/stmg-2.png" class="logo-xl" alt="logo dark" style="width: 150px;" />
         </a>
       </div>
     </div>

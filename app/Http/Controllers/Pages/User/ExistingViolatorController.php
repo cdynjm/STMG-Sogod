@@ -57,6 +57,7 @@ class ExistingViolatorController extends Controller
             'IDtype' => strtoupper($request->IDtype),
             'IDnumber' => strtoupper($request->IDnumber),
             'vehicle' => strtoupper($request->vehicle),
+            'plateNumber' => strtoupper($request->plateNumber),
             'ViolationFee' => $request->violationFee,
             'location' => strtoupper($request->location),
             'ticketedBy' => Auth::user()->staff->name,

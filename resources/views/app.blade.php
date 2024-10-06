@@ -14,7 +14,7 @@
     <!-- Scripts -->
 
     <!-- App favicon -->
-    <link rel="shortcut icon" href="/logo/logo-sogod.gif">
+    <link rel="shortcut icon" href="/logo/stmg-logo.jpg">
 
     <!-- Vendor css (Require in all Page) -->
     <link href="/assets/css/vendor.min.css" rel="stylesheet" type="text/css" />
@@ -67,7 +67,7 @@
     <script src="assets/js/app.min.js"></script>
 
     <!--Start of Tawk.to Script-->
-    <script type="text/javascript">
+   <!-- <script type="text/javascript">
         var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
         (function(){
         var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
@@ -77,7 +77,7 @@
         s1.setAttribute('crossorigin','*');
         s0.parentNode.insertBefore(s1,s0);
         })();
-    </script>
+    </script> -->
         <!--End of Tawk.to Script-->
 </body>
 

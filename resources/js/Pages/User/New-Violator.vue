@@ -31,6 +31,7 @@ const createForm = useForm({
     IDtype: null,
     IDnumber: null,
     vehicle: null,
+    plateNumber: null,
     violationFee: null,
     location: null,
 
@@ -64,6 +65,7 @@ const createNewViolator = () => {
                     createForm.IDtype = null
                     createForm.IDnumber = null
                     createForm.vehicle = null
+                    createForm.plateNumber = null,
                     createForm.violationFee = null
                     createForm.location = null
 
@@ -149,16 +151,20 @@ const createNewViolator = () => {
                                             <input type="text" class="form-control mb-2 text-uppercase "
                                                 v-model="createForm.IDnumber" required>
 
-                                            <label for="" class="mb-1">Vehicle Information</label>
-                                            <textarea name="" id="" class="form-control text-uppercase" rows="3"
-                                                v-model="createForm.vehicle" required></textarea>
+                                            <label for="" class="mb-1">Type of Vehicle</label>
+                                            <input name="" id="" class="form-control mb-2 text-uppercase" 
+                                                v-model="createForm.vehicle" required>
+                                            
+                                            <label for="" class="mb-1">Plate Number</label>
+                                            <input name="" id="" class="form-control text-uppercase" 
+                                                v-model="createForm.plateNumber" required>
 
                                         </div>
                                         <div class="col-md-6 mb-2">
 
                                             <p class="mb-2">Road Violation Information</p>
 
-                                            <label for="" class="mb-1">Number of times he/she been ticketed for traffic
+                                            <label for="" class="mb-1">Number of times been ticketed for traffic
                                                 violations</label>
                                             <input type="number" min="1" class="form-control mb-4 text-uppercase"
                                                 v-model="createForm.timesTicketed" required>

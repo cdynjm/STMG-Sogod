@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DriverViolation extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public $relation = ['drivervehicle', 'violations'];
 
@@ -23,10 +24,10 @@ class DriverViolation extends Model
     ];
 
     public function drivervehicle() {
-        return $this->hasOne(DriverVehicle::class, 'id', 'vehicleID');
+        return $this->hasOne(DriverVehicle::class, 'id', 'vehicleID')->withTrashed();
     }
 
     public function violations() {
-        return $this->hasOne(Violations::class, 'id', 'violation');
+        return $this->hasOne(Violations::class, 'id', 'violation')->withTrashed();
     }
 }

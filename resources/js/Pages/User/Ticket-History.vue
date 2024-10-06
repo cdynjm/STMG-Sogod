@@ -7,7 +7,7 @@ import Navbar from '@/Layouts/Navbar.vue';
 import Sidebar from '@/Layouts/Sidebar.vue';
 import Footer from '@/Layouts/Footer.vue';
 
-defineProps({
+const props = defineProps({
     ticket: Object,
     auth: Array,
     violation: Object,
@@ -29,12 +29,18 @@ const searchForm = useForm({
     result: 0,
 });
 
-const years = Array.from({ length: 2040 - 2023 + 1 }, (_, i) => 2023 + i);
-searchForm.search = ''
+const currentYear = new Date().getFullYear();
+const startYear = 2020;
+const years = Array.from({ length: currentYear - startYear + 1 }, (_, i) => startYear + i);
 
 const searchYear = () => {
     searchForm.get(route('user.search-year'));
 }
+
+onMounted(() => {
+    searchForm.search = props.year
+});
+
 </script>
 
 <template>
@@ -104,7 +110,7 @@ const searchYear = () => {
                                                 <th>Name</th>
                                                 <th>Violation</th>
                                                 <th>Penalty</th>
-                                                <th>Vehicle</th>
+                                                <th>Vehicle & Plate No.</th>
                                                 <th>ID</th>
                                             </tr>
                                         </thead>
@@ -140,7 +146,8 @@ const searchYear = () => {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    {{ tc.vehicle }}
+                                                    <div>{{ tc.vehicle }}</div>
+                                                    <div class="fw-bold">{{ tc.plateNumber }}</div>
                                                 </td>
                                                 <td>
                                                     <p>{{ tc.IDtype }}</p>

@@ -105,8 +105,8 @@ onMounted(() => {
 
                                 <div class="row mt-3">
                                     <div class="col-md-6">
-                                        <p class="mt-2">Vehicle Information: <span class="fw-bold">{{ dv.vehicle
-                                                }}</span></p>
+                                        <p class="mt-2">Type of Vehicle: <span class="fw-bold">{{ dv.vehicle }}</span></p>
+                                        <p class="">Plate Number: <span class="fw-bold">{{ dv.plateNumber }}</span></p>
                                         <p>ID Information: <span class="fw-bold">{{ dv.IDtype }} - {{ dv.IDnumber
                                                 }}</span></p>
                                     </div> <!-- end col -->

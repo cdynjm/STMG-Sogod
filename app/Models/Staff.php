@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Staff extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public $relation = ['user'];
 
@@ -22,6 +23,6 @@ class Staff extends Model
     ];
 
     public function user() {
-        return $this->hasOne(User::class, 'userID', 'id');
+        return $this->hasOne(User::class, 'userID', 'id')->withTrashed();
     }
 }

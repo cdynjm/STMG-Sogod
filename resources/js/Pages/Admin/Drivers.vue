@@ -59,7 +59,7 @@ onMounted(() => {
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="fw-bold">List of Drivers with Violation Records</h6>
+                                    <h6 class="fw-bold">Violator Records</h6>
                                 </div>
                             </div>
 

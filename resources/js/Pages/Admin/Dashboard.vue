@@ -22,8 +22,9 @@ const searchForm = useForm({
     result: 0,
 });
 
-const years = Array.from({ length: 2040 - 2023 + 1 }, (_, i) => 2023 + i);
-searchForm.search = '';
+const currentYear = new Date().getFullYear();
+const startYear = 2020;
+const years = Array.from({ length: currentYear - startYear + 1 }, (_, i) => startYear + i);
 
 const searchYear = () => {
     searchForm.get(route('search-year-analytics'));
@@ -86,11 +87,23 @@ const chartOptions = ref({
     },
 });
 
-const series2 = ref([]);
-const labels = ref([]);
+const series2 = ref([]); // Data for the violations
+const labels = ref([]);  // Labels for each violation
 
 const chartOptions2 = ref({
-    labels: labels.value,
+    chart: {
+        type: 'bar',
+        height: 350
+    },
+    plotOptions: {
+        bar: {
+            horizontal: true, // Setting the bar chart to be horizontal
+            borderRadius: 5
+        }
+    },
+    xaxis: {
+        categories: labels.value, // Assign labels to the x-axis
+    },
     fill: {
         opacity: 1
     },
@@ -144,12 +157,18 @@ const populateViolationData = () => {
             series2.value.push(count);
             labels.value.push(listViolation.violation);
         });
+        // Ensure the chart updates reactively by assigning the series data properly
+        series2.value = [{
+            name: 'Violations',
+            data: [...series2.value]
+        }];
     }
 };
 
 onMounted(() => {
     populateMonthData();
     populateViolationData();
+    searchForm.search = props.year
 });
 
 </script>
@@ -201,7 +220,7 @@ onMounted(() => {
                                         <span class="text-muted ms-1 fs-12 me-1">Year</span>
                                         <span class="text-success fw-bold">{{ year }}</span>
                                     </div>
-                                    <a href="#!" class="text-reset fw-semibold fs-12">Total Drivers/Violations</a>
+                                    <a href="#!" class="text-reset fw-semibold fs-12">Total Violations</a>
                                 </div>
                             </div> <!-- end card body -->
                         </div> <!-- end card -->
@@ -230,7 +249,7 @@ onMounted(() => {
                                     <div>
                                         ---
                                     </div>
-                                    <a href="#!" class="text-reset fw-semibold fs-12">Total Drivers/Violations</a>
+                                    <a href="#!" class="text-reset fw-semibold fs-12">Total Violations</a>
                                 </div>
                             </div> <!-- end card body -->
                         </div> <!-- end card -->
@@ -245,7 +264,6 @@ onMounted(() => {
                         <form action="" @submit.prevent="searchYear">
                             <div class="d-flex justify-content-between aligh-items-center mb-4">
                                 <select v-model="searchForm.search" id="year" class="form-select" required>
-                                    <option value="">Select Year ...</option>
                                     <option v-for="year in years" :key="year" :value="year">
                                         {{ year }}
                                     </option>
@@ -268,7 +286,7 @@ onMounted(() => {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mt-4">
-                                        <apexchart type="polarArea" :options="chartOptions2" :series="series2"
+                                        <apexchart type="bar" :options="chartOptions2" :series="series2"
                                             height="350">
                                         </apexchart>
                                     </div>
