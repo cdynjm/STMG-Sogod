@@ -22,6 +22,13 @@ onMounted(() => {
     $('#drivers-table').DataTable();
 });
 
+function capitalizeWords(text) {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 </script>
 
 <template>
@@ -71,8 +78,8 @@ onMounted(() => {
                                                 <th>No.</th>
                                                 <th>Name</th>
                                                 <th>Address</th>
-                                                <th>Contact Number</th>
-                                                <th>Times Ticketed</th>
+                                                <th>Birth Date</th>
+                                                
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -86,19 +93,18 @@ onMounted(() => {
                                                                 height="30"></iconify-icon>
                                                         </div>
                                                         <div class="mt-1 fw-bold">
-                                                            {{ dr.name }}
+                                                            {{ dr.firstname }} {{ dr.middlename }}  {{ dr.lastname }} {{ dr.suffix }}
                                                         </div>
                                                     </div>
                                                     </Link>
                                                 </td>
                                                 <td>
-                                                    {{ dr.address }}
+                                                    Brgy. {{ dr.barangay != null ? dr.barangay.brgyDesc : '' }}
+                                                    {{ dr.municipal != null ? capitalizeWords(dr.municipal.citymunDesc) : '' }} 
+                                                    {{ dr.province != null ? capitalizeWords(dr.province.provDesc) : '' }}
                                                 </td>
                                                 <td>
-                                                    {{ dr.contactNumber }}
-                                                </td>
-                                                <td>
-                                                    <span class="fs-5 fw-bolder">{{ dr.timesTicketed }}</span>
+                                                    {{ formatShortDate(dr.birthdate) }}
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -132,6 +138,12 @@ function formatDate(dateString) {
 
 function formatNumber(value) {
     return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+}
+
+function formatShortDate(dateString) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', options);
 }
 
 </script>

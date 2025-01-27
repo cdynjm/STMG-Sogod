@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import ApexCharts from 'vue3-apexcharts';
 import { Link, useForm } from '@inertiajs/vue3';
 
@@ -14,7 +14,9 @@ const props = defineProps({
     vehicleCount: Number,
     violation: Array,
     violationList: Array,
-    year: String
+    topViolations: Object,
+    year: String,
+    driver: Array
 });
 
 const searchForm = useForm({
@@ -87,9 +89,15 @@ const chartOptions = ref({
     },
 });
 
-const series2 = ref([]); // Data for the violations
-const labels = ref([]);  // Labels for each violation
 
+
+// Data for the violations
+const series2 = ref([]);
+
+// Labels for each violation
+const labels = ref([]);
+
+// Chart options
 const chartOptions2 = ref({
     chart: {
         type: 'bar',
@@ -102,7 +110,7 @@ const chartOptions2 = ref({
         }
     },
     xaxis: {
-        categories: labels.value, // Assign labels to the x-axis
+        categories: labels.value, // Initially set categories to labels.value
     },
     fill: {
         opacity: 1
@@ -141,6 +149,41 @@ const chartOptions2 = ref({
     }]
 });
 
+// Watch for changes in labels.value to update chartOptions2
+watch(labels, (newLabels) => {
+    chartOptions2.value = {
+        ...chartOptions2.value,
+        xaxis: {
+            categories: newLabels // Update categories in x-axis with new labels
+        }
+    };
+});
+
+const series3 = ref([]); // Declare series3
+const chartOptions3 = ref({});
+
+const series4 = ref([]); // Declare series3
+const chartOptions4 = ref({});
+
+// Function to populate violation data
+const populateViolationData = () => {
+    if (props.topViolations && Array.isArray(props.topViolations)) {
+        // Filter violations to include only those with a non-zero count
+        const filteredViolations = props.topViolations.filter(v => v.count > 0);
+
+        // Map the filtered violations for labels and counts
+        labels.value = filteredViolations.map(v => v.name); // Y-axis labels
+        const counts = filteredViolations.map(v => v.count); // Bar lengths
+
+        // Assign the filtered data to the series
+        series2.value = [{
+            name: 'Violations',
+            data: counts,
+        }];
+    }
+};
+
+// Function to populate monthly data
 const populateMonthData = () => {
     if (props.vehicle && Array.isArray(props.vehicle)) {
         props.vehicle.forEach(v => {
@@ -150,25 +193,139 @@ const populateMonthData = () => {
     }
 };
 
-const populateViolationData = () => {
-    if (props.violationList && Array.isArray(props.violationList)) {
-        props.violationList.forEach(listViolation => {
-            const count = props.violation.filter(v => v.violation === listViolation.id).length;
-            series2.value.push(count);
-            labels.value.push(listViolation.violation);
+const populateAgeGroupData = () => {
+    if (props.vehicle && Array.isArray(props.vehicle)) {
+        
+        const ageGroups = {
+            "15-20 years": { count: 0, ages: [] },
+            "21-30 years": { count: 0, ages: [] },
+            "31-40 years": { count: 0, ages: [] },
+            "41-50 years": { count: 0, ages: [] },
+            "51+ years": { count: 0, ages: [] },
+        };
+
+        // Calculate age group counts and store the ages
+        props.vehicle.forEach(v => {
+            if (v.age) {
+                const vehicleAge = v.age;
+                if (vehicleAge >= 15 && vehicleAge <= 20) {
+                    ageGroups["15-20 years"].count++;
+                    ageGroups["15-20 years"].ages.push(vehicleAge);
+                } else if (vehicleAge >= 21 && vehicleAge <= 30) {
+                    ageGroups["21-30 years"].count++;
+                    ageGroups["21-30 years"].ages.push(vehicleAge);
+                } else if (vehicleAge >= 31 && vehicleAge <= 40) {
+                    ageGroups["31-40 years"].count++;
+                    ageGroups["31-40 years"].ages.push(vehicleAge);
+                } else if (vehicleAge >= 41 && vehicleAge <= 50) {
+                    ageGroups["41-50 years"].count++;
+                    ageGroups["41-50 years"].ages.push(vehicleAge);
+                } else if (vehicleAge >= 51) {
+                    ageGroups["51+ years"].count++;
+                    ageGroups["51+ years"].ages.push(vehicleAge);
+                }
+            }
         });
-        // Ensure the chart updates reactively by assigning the series data properly
-        series2.value = [{
-            name: 'Violations',
-            data: [...series2.value]
+
+        // Prepare the data for chart series and tooltip
+        series3.value = [{
+            name: "Violations",
+            data: Object.values(ageGroups).map(group => group.count),
         }];
+
+        // Customize tooltip to show the list of ages within each group
+        chartOptions3.value = {
+            chart: {
+                type: "line",
+                toolbar: {
+                    show: false,
+                },
+            },
+            xaxis: {
+                categories: Object.keys(ageGroups),
+                title: {
+                    text: "Age Group",
+                },
+            },
+            yaxis: {
+                title: {
+                    text: "Number of Violations",
+                },
+            },
+            title: {
+                text: "Most Violated Age Groups",
+                align: "center",
+            },
+            tooltip: {
+                custom: ({ seriesIndex, dataPointIndex, w }) => {
+                    const ageGroup = Object.keys(ageGroups)[dataPointIndex];
+                    const agesInGroup = ageGroups[ageGroup].ages;
+                    return `
+                        <div class="tooltip-custom">
+                            <strong>${ageGroup}</strong><br>
+                            Violations: ${w.globals.series[seriesIndex][dataPointIndex]}<br>
+                            Ages: ${agesInGroup.join(', ')}
+                        </div>
+                    `;
+                }
+            }
+        };
     }
+};
+
+// Function to populate gender data for pie chart
+const populateGenderData = () => {
+  if (props.driver && Array.isArray(props.driver)) {
+    // Initialize male and female counts
+    const genderCounts = {
+      "Male": 0,
+      "Female": 0,
+    };
+
+    // Count male and female drivers
+    props.driver.forEach(d => {
+      if (d.gender) {
+        if (d.gender === '1') {
+          genderCounts["Male"]++;
+        } else if (d.gender === '2') {
+          genderCounts["Female"]++;
+        }
+      }
+    });
+
+    // Prepare the data for gender chart series
+    series4.value = [genderCounts["Male"], genderCounts["Female"]];
+
+    // Customize the gender chart
+    chartOptions4.value = {
+      chart: {
+        type: "pie",
+        toolbar: {
+          show: false,
+        },
+      },
+      labels: ["Male", "Female"], // Gender categories
+      title: {
+        text: "Gender Distribution of Drivers",
+        align: "center",
+      },
+      tooltip: {
+        y: {
+          formatter: (value) => {
+            return `${value} drivers`; // Show the count in tooltip
+          },
+        },
+      },
+    };
+  }
 };
 
 onMounted(() => {
     populateMonthData();
     populateViolationData();
-    searchForm.search = props.year
+    populateAgeGroupData(); // Existing function for age group chart
+    populateGenderData(); // Call the new function for gender chart
+    searchForm.search = props.year;
 });
 
 </script>
@@ -220,7 +377,7 @@ onMounted(() => {
                                         <span class="text-muted ms-1 fs-12 me-1">Year</span>
                                         <span class="text-success fw-bold">{{ year }}</span>
                                     </div>
-                                    <a href="#!" class="text-reset fw-semibold fs-12">Total Violations</a>
+                                    <a href="#!" class="text-reset fw-semibold fs-12">More Info</a>
                                 </div>
                             </div> <!-- end card body -->
                         </div> <!-- end card -->
@@ -239,7 +396,7 @@ onMounted(() => {
                                         </div>
                                     </div> <!-- end col -->
                                     <div class="col-6 text-end">
-                                        <p class="text-muted mb-0 text-truncate fw-bold">Unpaid Penalty Tickets</p>
+                                        <p class="text-muted mb-0 text-truncate fw-bold">To Pay (Penalty Tickets)</p>
                                         <h3 class="text-dark mt-1 mb-0 fs-2 fw-bold">{{ unpaid }}</h3>
                                     </div> <!-- end col -->
                                 </div> <!-- end row-->
@@ -249,7 +406,7 @@ onMounted(() => {
                                     <div>
                                         ---
                                     </div>
-                                    <a href="#!" class="text-reset fw-semibold fs-12">Total Violations</a>
+                                    <a href="#!" class="text-reset fw-semibold fs-12">More Info</a>
                                 </div>
                             </div> <!-- end card body -->
                         </div> <!-- end card -->
@@ -282,15 +439,34 @@ onMounted(() => {
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <apexchart type="area" :options="chartOptions" :series="series"></apexchart>
+                                    <apexchart type="area" :options="chartOptions" :series="series" height="500"></apexchart>
                                 </div>
                                 <div class="col-md-6">
+                                    <div class="fw-bold text-secondary">Top Highest Violations Recorded</div>
                                     <div class="mt-4">
                                         <apexchart type="bar" :options="chartOptions2" :series="series2"
-                                            height="350">
+                                            height="400">
                                         </apexchart>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="mt-4">
+                                        <apexchart type="line" :options="chartOptions3" :series="series3" height="400"></apexchart>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                <div>
+                                    <apexchart 
+                                    type="pie" 
+                                    :options="chartOptions4" 
+                                    :series="series4" 
+                                    height="400">
+                                    </apexchart>
+                                </div>
+                                </div>
+
+
                             </div>
                         </div>
                     </div>
@@ -312,3 +488,20 @@ function getMonthNumber(date) {
 }
 
 </script>
+
+<style>
+.tooltip-custom {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-custom strong {
+    color: #333;
+}
+
+</style>

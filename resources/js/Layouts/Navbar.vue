@@ -41,6 +41,10 @@ onMounted(() => {
 
 const editProfileForm = useForm({
      name: null,
+     firstname: null,
+     middlename: null,
+     lastname: null,
+     suffix: null,
      email: null,
      password: null,
      error: null
@@ -50,6 +54,15 @@ const editProfileForm = useForm({
 const editProfile = (name, email) => {
      editProfileModal.value.show();
      editProfileForm.name = name
+     editProfileForm.email = email
+};
+
+const editProfileStaff = (firstname, middlename, lastname, suffix, email) => {
+     editProfileModal.value.show();
+     editProfileForm.firstname = firstname
+     editProfileForm.middlename = middlename
+     editProfileForm.lastname = lastname
+     editProfileForm.suffix = suffix
      editProfileForm.email = email
 };
 
@@ -102,7 +115,7 @@ const updateProfile = () => {
           <div class="modal-dialog">
                <div class="modal-content">
                     <div class="modal-header">
-                         <h5 class="modal-title" id="staticBackdropLabel">Create Staff</h5>
+                         <h5 class="modal-title" id="staticBackdropLabel">Edit Profile</h5>
                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form action="" @submit.prevent="updateProfile">
@@ -112,8 +125,24 @@ const updateProfile = () => {
                                    {{ editProfileForm.error }}
                               </div>
 
-                              <label for="" class="mb-1">Full Name</label>
-                              <input type="text" class="form-control mb-3" v-model="editProfileForm.name" required>
+                              <div v-if="user?.role == 1">
+                                   <label for="" class="mb-1">Full Name</label>
+                                   <input type="text" class="form-control mb-3" v-model="editProfileForm.name" required>
+                              </div>
+
+                              <div v-if="user?.role == 2">
+                                   <label for="" class="mb-1">First Name</label>
+                                   <input type="text" class="form-control mb-3" v-model="editProfileForm.firstname" required>
+
+                                   <label for="" class="mb-1">Middle Name</label>
+                                   <input type="text" class="form-control mb-3" v-model="editProfileForm.middlename">
+
+                                   <label for="" class="mb-1">Last Name</label>
+                                   <input type="text" class="form-control mb-3" v-model="editProfileForm.lastname" required>
+
+                                   <label for="" class="mb-1">Suffix</label>
+                                   <input type="text" class="form-control mb-3" v-model="editProfileForm.suffix">
+                              </div>
 
                               <label for="" class="mb-1">Email</label>
                               <input type="email" class="form-control mb-3" v-model="editProfileForm.email" required>
@@ -159,7 +188,7 @@ const updateProfile = () => {
                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                    <span class="d-flex align-items-center">
                                         <span class="me-2 fw-bold" v-if="user?.role === 1">{{ user?.name }}</span>
-                                        <span class="me-2 fw-bold" v-if="user?.role === 2">{{ user?.staff.name }}</span>
+                                        <span class="me-2 fw-bold" v-if="user?.role === 2">{{ user?.staff.firstname }} {{ user?.staff.middename }} {{ user?.staff.lastname }} {{ user?.staff.suffix }}</span>
                                         <img class="rounded-circle" width="32" src="/logo/office-man.png"
                                              alt="avatar-3">
                                    </span>
@@ -178,7 +207,7 @@ const updateProfile = () => {
                                    </a>
 
                                    <a v-if="user?.role === 2" href="" class="dropdown-item"
-                                        @click.prevent="editProfile(user?.staff.name, user?.email)">
+                                        @click.prevent="editProfileStaff(user?.staff.firstname, user?.staff.middlename, user?.staff.lastname, user?.staff.suffix, user?.email)">
                                         <iconify-icon icon="solar:user-bold-duotone"
                                              class="align-middle me-2 fs-18"></iconify-icon>
                                         <span class="align-middle text-dark">My Account</span>

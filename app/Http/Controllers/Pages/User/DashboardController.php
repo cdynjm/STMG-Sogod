@@ -28,7 +28,11 @@ class DashboardController extends Controller
 
     public function searchExistingViolator(Request $request) {
 
-        $drivers = DriverInfo::where('name', 'like', '%'.$request->search.'%')->get()
+       $drivers = DriverInfo::with((new DriverInfo)->relation)->where('firstname', 'like', '%' . $request->search . '%')
+        ->orWhere('middlename', 'like', '%' . $request->search . '%')
+        ->orWhere('lastname', 'like', '%' . $request->search . '%')
+        ->orWhere('suffix', 'like', '%' . $request->search . '%')
+        ->get()
 
         ->map(function ($data) {
             $array = $data->toArray();

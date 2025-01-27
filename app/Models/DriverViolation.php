@@ -20,7 +20,8 @@ class DriverViolation extends Model
         'officerID',
         'violation',
         'fee',
-        'status'
+        'status',
+        'offense'
     ];
 
     public function drivervehicle() {

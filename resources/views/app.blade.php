@@ -16,6 +16,9 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="/logo/stmg-logo.jpg">
 
+
+    @if (Route::is('admin.receipt'))
+    @else
     <!-- Vendor css (Require in all Page) -->
     <link href="/assets/css/vendor.min.css" rel="stylesheet" type="text/css" />
 
@@ -51,6 +54,7 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    @endif
 
     @routes
     @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
@@ -60,12 +64,13 @@
 <body>
     @inertia
 
+    @if (Route::is('admin.receipt'))
+    @else
     <!-- Vendor Javascript (Require in all Page) -->
     <script src="/assets/js/vendor.min.js"></script>
-
     <!-- App Javascript (Require in all Page) -->
     <script src="assets/js/app.min.js"></script>
-
+    @endif
     <!--Start of Tawk.to Script-->
    <!-- <script type="text/javascript">
         var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();

@@ -21,7 +21,7 @@ class DriversController extends Controller
 
     public function drivers() {
 
-        $drivers = DriverInfo::get()
+        $drivers = DriverInfo::with((new DriverInfo)->relation)->get()
 
         ->map(function ($data) {
             $array = $data->toArray();

@@ -23,6 +23,12 @@ Route::group(['middleware' => 'auth'], function () {
 
 			Route::get('/ticket-history', [TicketHistoryController::class, 'ticketHistory'])->name('user.ticket-history');
 			Route::get('/ticket-history/search', [TicketHistoryController::class, 'searchYear'])->name('user.search-year');
+
+			Route::get('/regions', [NewViolatorController::class, 'getRegions']);
+			Route::get('/provinces', [NewViolatorController::class, 'getProvinces']);
+			Route::get('/municipals', [NewViolatorController::class, 'getMunicipals']);
+			Route::get('/barangays', [NewViolatorController::class, 'getBarangays']);
+
 		});
 
 	});

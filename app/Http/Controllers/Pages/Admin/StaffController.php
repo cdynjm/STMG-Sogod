@@ -14,10 +14,34 @@ use Illuminate\Validation\Rule;
 
 use App\Models\User;
 use App\Models\Staff;
+use App\Models\Region;
+use App\Models\Province;
+use App\Models\Municipal;
+use App\Models\Barangay;
 
 class StaffController extends Controller
 {
     public function __construct(protected AESCipher $aes) {}
+    
+    public function getRegions()
+    {
+        return Region::all();
+    }
+
+    public function getProvinces(Request $request)
+    {
+        return Province::where('regCode', $request->regCode)->get();
+    }
+
+    public function getMunicipals(Request $request)
+    {
+        return Municipal::where('provCode', $request->provCode)->get();
+    }
+
+    public function getBarangays(Request $request)
+    {
+        return Barangay::where('citymunCode', $request->citymunCode)->get();
+    }
 
     public function staff() {
         
@@ -51,9 +75,15 @@ class StaffController extends Controller
         ]); }
 
         $staff = Staff::create([
-            'name' => $request->name,
+            'firstname' => $request->firstname,
+            'middlename' => $request->middlename ?? null,
+            'lastname' => $request->lastname,
+            'suffix' => $request->suffix ?? null,
             'position' => $request->position,
-            'address' => $request->address,
+            'region' => $request->region,
+            'province' => $request->province,
+            'municipal' => $request->municipal,
+            'barangay' => $request->barangay,
             'contactNumber' => $request->contactNumber
         ]);
 
@@ -82,9 +112,15 @@ class StaffController extends Controller
         ]); }
 
         $staff = Staff::where('id', $this->aes->decrypt($request->id))->update([
-            'name' => $request->name,
+            'firstname' => $request->firstname,
+            'middlename' => $request->middlename ?? null,
+            'lastname' => $request->lastname,
+            'suffix' => $request->suffix ?? null,
             'position' => $request->position,
-            'address' => $request->address,
+            'region' => $request->region,
+            'province' => $request->province,
+            'municipal' => $request->municipal,
+            'barangay' => $request->barangay,
             'contactNumber' => $request->contactNumber
         ]);
 

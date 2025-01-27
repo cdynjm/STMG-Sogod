@@ -53,7 +53,10 @@ class NavbarController extends Controller
         if(Auth::user()->role == 2) {
 
             Auth::user()->staff->update([
-                'name' => $request->name
+                'firstname' => $request->firstname,
+                'middlename' => $request->middlename ?? null,
+                'lastname' => $request->lastname,
+                'suffix' => $request->suffix ?? null,
             ]);
 
             Auth::user()->update([

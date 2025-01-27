@@ -17,6 +17,13 @@ const searchExistingViolator = () => {
     searchForm.get(route('search-exising-violator'));
 };
 
+function capitalizeWords(text) {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 </script>
 
 <template>
@@ -57,7 +64,7 @@ const searchExistingViolator = () => {
                                                 <th>No.</th>
                                                 <th>Name</th>
                                                 <th>Address</th>
-                                                <th>Contact Number</th>
+                                                <th>Birth Date</th>
 
                                             </tr>
                                         </thead>
@@ -72,13 +79,18 @@ const searchExistingViolator = () => {
                                                                 height="30"></iconify-icon>
                                                         </div>
                                                         <div class="mt-1 fw-bold">
-                                                            {{ dr.name }}
+                                                            {{ dr.firstname }} {{ dr.middlename }} {{ dr.lastname }} {{ dr.suffix }}
                                                         </div>
                                                     </div>
                                                     </Link>
                                                 </td>
-                                                <td>{{ dr.address }}</td>
-                                                <td>{{ dr.contactNumber }}</td>
+                                                <td class="text-nowrap">
+                                                    Brgy. {{ dr.barangay != null ? dr.barangay.brgyDesc : '' }}
+                                                    {{ dr.municipal != null ? capitalizeWords(dr.municipal.citymunDesc) : '' }} 
+                                                    {{ dr.province != null ? capitalizeWords(dr.province.provDesc) : '' }}
+                                                </td>
+                                                <td>{{ formatDate(dr.birthdate) }}</td>
+                                                
                                             </tr>
                                             <tr v-if="result === 0">
                                                 <td colspan="4" class="text-center text-danger">No Data Found</td>
@@ -110,3 +122,13 @@ const searchExistingViolator = () => {
 
     </div>
 </template>
+
+<script>
+
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', options);
+}
+
+</script>

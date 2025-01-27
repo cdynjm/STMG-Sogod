@@ -21,16 +21,27 @@ class TicketHistoryController extends Controller
 
     public function ticketHistory() {
 
-        $ticket = DriverVehicle::with((new DriverVehicle)->relation)
-            ->where('officerID', Auth::user()->staff->id)
-            ->where('created_at', 'like', '%'.date('Y').'%')
-            ->orderBy('created_at', 'DESC')
-            ->get();
+        $ticket = DriverVehicle::with(['driverinfo.region', 'driverinfo.province', 'driverinfo.municipal', 'driverinfo.barangay'])
+        ->where('officerID', Auth::user()->staff->id)
+        ->where('created_at', 'like', '%'.date('Y').'%')
+        ->orderBy('created_at', 'DESC')
+        ->get()
+        ->map(function ($data) {
+            $array = $data->toArray();
+            $array['id'] = $this->aes->encrypt($data->id);
+            return $array;
+        });
+    
 
         $violation = DriverViolation::with((new DriverViolation)->relation)
             ->where('officerID', Auth::user()->staff->id)
             ->where('created_at', 'like', '%'.date('Y').'%')
-            ->get();
+            ->get()
+            ->map(function ($data) {
+                $array = $data->toArray();
+                $array['vehicleID'] = $this->aes->encrypt($data->vehicleID);
+                return $array;
+            });
 
         return Inertia::render('User/Ticket-History', [
             'ticket' => $ticket,
@@ -42,7 +53,7 @@ class TicketHistoryController extends Controller
 
     public function searchYear(Request $request) {
 
-        $ticket = DriverVehicle::with((new DriverVehicle)->relation)
+        $ticket = DriverVehicle::with(['driverinfo.region', 'driverinfo.province', 'driverinfo.municipal', 'driverinfo.barangay'])
             ->where('officerID', Auth::user()->staff->id)
             ->where('created_at', 'like', '%'.$request->search.'%')
             ->orderBy('created_at', 'DESC')

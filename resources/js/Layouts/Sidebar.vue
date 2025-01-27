@@ -57,6 +57,11 @@ export default {
       checkWindowSize();
       $(window).resize(checkWindowSize);
     },
+    receiptInfo() {
+      this.$inertia.get(route('receipt-info'));
+      checkWindowSize();
+      $(window).resize(checkWindowSize);
+    },
     ticketHistory() {
       this.$inertia.get(route('user.ticket-history'));
       checkWindowSize();
@@ -75,6 +80,9 @@ export default {
     },
     isDriversActive() {
       return this.$page.component === "Admin/Drivers";
+    },
+    isReceiptInfoActive() {
+      return this.$page.component === "Admin/ReceiptInfo";
     },
     isTicketHistoryActive() {
       return this.$page.component === "User/Ticket-History";

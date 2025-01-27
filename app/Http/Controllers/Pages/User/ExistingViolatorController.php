@@ -15,9 +15,34 @@ use App\Models\DriverInfo;
 use App\Models\DriverVehicle;
 use App\Models\DriverViolation;
 
+use App\Models\Region;
+use App\Models\Province;
+use App\Models\Municipal;
+use App\Models\Barangay;
+
 class ExistingViolatorController extends Controller
 {
     public function __construct(protected AESCipher $aes) {}
+
+    public function getRegions()
+    {
+        return Region::all();
+    }
+
+    public function getProvinces(Request $request)
+    {
+        return Province::where('regCode', $request->regCode)->get();
+    }
+
+    public function getMunicipals(Request $request)
+    {
+        return Municipal::where('provCode', $request->provCode)->get();
+    }
+
+    public function getBarangays(Request $request)
+    {
+        return Barangay::where('citymunCode', $request->citymunCode)->get();
+    }
 
     public function existingViolator(Request $request) {
 
@@ -25,18 +50,15 @@ class ExistingViolatorController extends Controller
         $driver = $data->toArray();
         $driver['id'] = $this->aes->encrypt($data->id);
         
-        $violation = Violations::get()
+        $driverViolation = DriverViolation::where('driverID', $this->aes->decrypt($request->id))->get();
 
-        ->map(function ($data) {
-            $array = $data->toArray();
-            $array['id'] = $this->aes->encrypt($data->id);
-            return $array;
-        });
+        $violation = Violations::get();
 
         return Inertia::render('User/Existing-Violator', [
             'violations' => $violation,
             'auth' =>  Auth::user()->load(Auth::user()->relation),
-            'driver' => $driver
+            'driver' => $driver,
+            'driverViolation' => $driverViolation
         ]);
     }
 
@@ -45,43 +67,57 @@ class ExistingViolatorController extends Controller
         $total = 0;
 
         DriverInfo::where('id', $this->aes->decrypt($request->id))->update([
-            'name' => strtoupper($request->name),
-            'age' => $request->age,
-            'address' => strtoupper($request->address),
-            'contactNumber' => $request->contactNumber,
-            'timesTicketed' => $request->timesTicketed + 1
+            'firstname' => strtoupper($request->firstname),
+            'middlename' => strtoupper($request->middlename) ?? null,
+            'lastname' => strtoupper($request->lastname),
+            'suffix' => strtoupper($request->suffix) ?? null,
+            'region' => $request->region,
+            'province' => $request->province,
+            'municipal' => $request->municipal,
+            'barangay' => $request->barangay,
+            'birthdate' => $request->birthdate,
+            'gender' => $request->gender
         ]);
 
         $vehicle = DriverVehicle::create([
             'driverID' => $this->aes->decrypt($request->id),
-            'IDtype' => strtoupper($request->IDtype),
             'IDnumber' => strtoupper($request->IDnumber),
             'vehicle' => strtoupper($request->vehicle),
             'plateNumber' => strtoupper($request->plateNumber),
-            'ViolationFee' => $request->violationFee,
             'location' => strtoupper($request->location),
-            'ticketedBy' => Auth::user()->staff->name,
+            'ticketedBy' => 
+                Auth::user()->staff->firstname . ' ' . 
+                (Auth::user()->staff->middlename != null ? Auth::user()->staff->middlename : '') . ' ' . 
+                Auth::user()->staff->lastname . ' ' . 
+                (Auth::user()->staff->suffix != null ? Auth::user()->staff->suffix : ''),
             'officerID' => Auth::user()->staff->id,
-            'status' => 1
+            'status' => 1,
+            'age' => $request->age
         ]);
 
-        foreach($request->violations as $key => $value) {
-
-            $total += Violations::where('id', $this->aes->decrypt($value))->first()->fee;
-
-            $fee = Violations::where('id', $this->aes->decrypt($value))->first()->fee;
-
+        foreach ($request->violations as $key => $value) {
+            // Get the count of existing violations for this driver and this specific violation
+            $existingOffenseCount = DriverViolation::where('driverID', $this->aes->decrypt($request->id))
+                ->where('violation', $value)
+                ->count();
+        
+            // Increment the offense count for the new entry
+            $newOffenseCount = $existingOffenseCount + 1;
+        
+            // Create the new violation record with the correct offense count
             DriverViolation::create([
                 'vehicleID' => $vehicle->id,
                 'driverID' => $this->aes->decrypt($request->id),
                 'officerID' => Auth::user()->staff->id,
-                'violation' => $this->aes->decrypt($value),
-                'fee' => $fee,
-                'status' => 1
+                'violation' => $value,
+                //'fee' => $request->violationAmounts[$value], // Uncomment if needed
+                'status' => 1,
+                'offense' => $newOffenseCount // Set the offense count dynamically
             ]);
         }
-
-        DriverVehicle::where('id', $vehicle->id)->update(['violationFee' => $total]);
+        
+  
+          DriverVehicle::where('id', $vehicle->id)->update(['violationFee' => $total]);
 
         return back()->withErrors(['penalty' => $total]);
     }

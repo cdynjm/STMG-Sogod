@@ -21,9 +21,22 @@ class DriversInfoController extends Controller
 
     public function driversInfo(Request $request) {
 
-        $driverInfo = DriverInfo::where('id', $this->aes->decrypt($request->id))->first();
-        $driverVehicle = DriverVehicle::where('driverID', $this->aes->decrypt($request->id))->orderBy('created_at', 'DESC')->get();
-        $driverViolation = DriverViolation::with((new DriverViolation)->relation)->where('driverID', $this->aes->decrypt($request->id))->get();
+        $driverInfo = DriverInfo::with((new DriverInfo)->relation)
+        ->where('id', $this->aes->decrypt($request->id))->first();
+        
+        $driverVehicle = DriverVehicle::where('driverID', $this->aes->decrypt($request->id))->orderBy('created_at', 'DESC')->get()
+        ->map(function ($data) {
+            $array = $data->toArray();
+            $array['id'] = $this->aes->encrypt($data->id);
+            return $array;
+        });
+
+        $driverViolation = DriverViolation::with((new DriverViolation)->relation)->where('driverID', $this->aes->decrypt($request->id))->get()
+        ->map(function ($data) {
+            $array = $data->toArray();
+            $array['vehicleID'] = $this->aes->encrypt($data->vehicleID);
+            return $array;
+        });
 
         return Inertia::render('Admin/DriversInfo', [
             'driverInfo' => $driverInfo,

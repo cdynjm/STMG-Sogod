@@ -15,6 +15,7 @@ class DriverVehicle extends Model
     protected $table = "driver_vehicle";
 
     protected $fillable = [
+        'age',
         'driverID',
         'IDtype',
         'IDnumber',
@@ -24,7 +25,11 @@ class DriverVehicle extends Model
         'location',
         'ticketedBy',
         'officerID',
-        'status'
+        'status',
+        'treasurer',
+        'collector',
+        'ORnumber',
+        'datePaid'
     ];
 
     public function driverinfo() {

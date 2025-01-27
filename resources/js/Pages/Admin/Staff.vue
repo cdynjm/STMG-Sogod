@@ -1,11 +1,12 @@
 <script setup>
 
 import { Link, useForm } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 
 import Navbar from '@/Layouts/Navbar.vue';
 import Sidebar from '@/Layouts/Sidebar.vue';
 import Footer from '@/Layouts/Footer.vue';
+import axios from 'axios';
 
 defineProps({
     staff: Array,
@@ -29,12 +30,19 @@ onMounted(() => {
     successToast.value = new bootstrap.Toast($('#success-toast'), {
         keyboard: false
     });
+    fetchRegions();
 });
 
 const createForm = useForm({
-    name: null,
+    firstname: null,
+    lastname: null,
+    middlename: null,
+    suffix: null,
     position: null,
-    address: null,
+    region: null,
+    province: null,
+    municipal: null,
+    barangay: null,
     email: null,
     contactNumber: null,
     password: null,
@@ -42,11 +50,99 @@ const createForm = useForm({
     status: null,
 });
 
+const regions = ref([]);
+const provinces = ref([]);
+const municipals = ref([]);
+const barangays = ref([]);
+
+// Fetch Regions when the modal is opened
+const fetchRegions = async () => {
+    try {
+        const response = await axios.get('/admin/regions');
+        regions.value = response.data;
+    } catch (error) {
+        console.error('Error fetching regions:', error);
+    }
+};
+
+// Fetch Provinces when a Region is selected
+const fetchProvinces = async () => {
+    try {
+        const response = await axios.get(`/admin/provinces?regCode=${createForm.region}`);
+        provinces.value = response.data;
+        municipals.value = [];
+        barangays.value = [];
+        createForm.province = null;
+        createForm.municipal = null;
+        createForm.barangay = null;
+    } catch (error) {
+        console.error('Error fetching provinces:', error);
+    }
+};
+
+// Fetch Municipals when a Province is selected
+const fetchMunicipals = async () => {
+    try {
+        const response = await axios.get(`/admin/municipals?provCode=${createForm.province}`);
+        municipals.value = response.data;
+        barangays.value = [];
+        createForm.municipal = null;
+        createForm.barangay = null;
+    } catch (error) {
+        console.error('Error fetching municipals:', error);
+    }
+};
+
+// Fetch Barangays when a Municipal is selected
+const fetchBarangays = async () => {
+    try {
+        const response = await axios.get(`/admin/barangays?citymunCode=${createForm.municipal}`);
+        barangays.value = response.data;
+        createForm.barangay = null;
+    } catch (error) {
+        console.error('Error fetching barangays:', error);
+    }
+};
+
+const fetchProvincesForEdit = async (regionCode) => {
+    try {
+        const response = await axios.get(`/admin/provinces?regCode=${regionCode}`);
+        provinces.value = response.data;
+    } catch (error) {
+        console.error('Error fetching provinces for edit:', error);
+    }
+};
+
+const fetchMunicipalsForEdit = async (provCode) => {
+    try {
+        const response = await axios.get(`/admin/municipals?provCode=${provCode}`);
+        municipals.value = response.data;
+    } catch (error) {
+        console.error('Error fetching municipals for edit:', error);
+    }
+};
+
+const fetchBarangaysForEdit = async (citymunCode) => {
+    try {
+        const response = await axios.get(`/admin/barangays?citymunCode=${citymunCode}`);
+        barangays.value = response.data;
+    } catch (error) {
+        console.error('Error fetching barangays for edit:', error);
+    }
+};
+
+
 const editForm = useForm({
     id: null,
-    name: null,
+    firstname: null,
+    lastname: null,
+    middlename: null,
+    suffix: null,
     position: null,
-    address: null,
+    region: null,
+    province: null,
+    municipal: null,
+    barangay: null,
     email: null,
     contactNumber: null,
     password: null,
@@ -55,18 +151,52 @@ const editForm = useForm({
 });
 
 const createStaff = () => {
+    
     createModal.value.show();
 };
 
-const editStaff = (id, name, position, address, contactNumber, email) => {
+const editStaff = async (
+    id,
+    firstname,
+    middlename,
+    lastname,
+    suffix,
+    position,
+    region,
+    province,
+    municipal,
+    barangay,
+    contactNumber,
+    email
+) => {
+    editForm.id = id;
+    editForm.firstname = firstname;
+    editForm.middlename = middlename;
+    editForm.lastname = lastname;
+    editForm.suffix = suffix;
+    editForm.position = position;
+    editForm.contactNumber = contactNumber;
+    editForm.email = email;
+
+    // Set region and fetch provinces
+    editForm.region = region;
+    await fetchProvincesForEdit(region);
+
+    // Set province and fetch municipals
+    editForm.province = province;
+    await fetchMunicipalsForEdit(province);
+
+    // Set municipal and fetch barangays
+    editForm.municipal = municipal;
+    await fetchBarangaysForEdit(municipal);
+
+    // Set barangay
+    editForm.barangay = barangay;
+
+    // Show the modal
     editModal.value.show();
-    editForm.id = id
-    editForm.name = name
-    editForm.position = position
-    editForm.address = address
-    editForm.contactNumber = contactNumber
-    editForm.email = email
 };
+
 
 const createStaffData = () => {
     createForm.post(route('create-staff'), {
@@ -127,6 +257,13 @@ const deleteStaff = (id) => {
     })
 };
 
+function capitalizeWords(text) {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 </script>
 
 <template>
@@ -157,7 +294,7 @@ const deleteStaff = (id) => {
 
         <div class="modal fade" id="createModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
             aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="staticBackdropLabel">Create Staff</h5>
@@ -170,18 +307,80 @@ const deleteStaff = (id) => {
                                 {{ createForm.error }}
                             </div>
 
-                            <label for="" class="mb-1">Full Name</label>
-                            <input type="text" class="form-control mb-3" v-model="createForm.name" required>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">First Name</label>
+                                    <input type="text" class="form-control mb-3" v-model="createForm.firstname" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">Middle Name</label>
+                                    <input type="text" class="form-control mb-3" v-model="createForm.middlename">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">Last Name</label>
+                                    <input type="text" class="form-control mb-3" v-model="createForm.lastname" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">Suffix</label>
+                                    <input type="text" class="form-control mb-3" v-model="createForm.suffix">
+                                </div>
+                            </div>
 
-                            <label for="" class="mb-1">Position</label>
-                            <input type="text" class="form-control mb-3" v-model="createForm.position" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="" class="mb-1">Position</label>
+                                    <select name="" id="" class="form-select mb-3" v-model="createForm.position"required>
+                                        <option value="STMG Enforcer">STMG Enforcer</option>
+                                        <option value="Traffic Enforcer">Traffic Enforcer</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="" class="mb-1">Contact Number</label>
+                                    <input type="number" class="form-control mb-3" v-model="createForm.contactNumber" required>
+                                </div>
+                            </div>
 
-                            <label for="" class="mb-1">Contact Number</label>
-                            <input type="number" class="form-control mb-3" v-model="createForm.contactNumber" required>
-
-                            <label for="" class="mb-1">Address</label>
-                            <input type="text" class="form-control mb-3" v-model="createForm.address" required>
-
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="region" class="mb-1">Region</label>
+                                    <select class="form-select mb-3" v-model="createForm.region" @change="fetchProvinces" required>
+                                        <option value="" disabled>Select a Region</option>
+                                        <option v-for="region in regions" :key="region.regCode" :value="region.regCode">
+                                            {{ region.regDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="province" class="mb-1">Province</label>
+                                    <select class="form-select mb-3" v-model="createForm.province" @change="fetchMunicipals" required>
+                                        <option value="" disabled>Select a Province</option>
+                                        <option v-for="province in provinces" :key="province.provCode" :value="province.provCode">
+                                            {{ province.provDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="municipal" class="mb-1">Municipal</label>
+                                    <select class="form-select mb-3" v-model="createForm.municipal" @change="fetchBarangays" required>
+                                        <option value="" disabled>Select a Municipal</option>
+                                        <option v-for="municipal in municipals" :key="municipal.citymunCode" :value="municipal.citymunCode">
+                                            {{ municipal.citymunDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="barangay" class="mb-1">Barangay</label>
+                                    <select class="form-select mb-3" v-model="createForm.barangay" required>
+                                        <option value="" disabled>Select a Barangay</option>
+                                        <option v-for="barangay in barangays" :key="barangay.brgyCode" :value="barangay.brgyCode">
+                                            {{ barangay.brgyDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                          
                             <label for="" class="mb-1">Email</label>
                             <input type="email" class="form-control mb-3" v-model="createForm.email" required>
 
@@ -199,7 +398,7 @@ const deleteStaff = (id) => {
 
         <div class="modal fade" id="editModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
             aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="staticBackdropLabel">Edit User</h5>
@@ -213,17 +412,80 @@ const deleteStaff = (id) => {
 
                             <input type="hidden" class="form-control" v-model="editForm.id">
 
-                            <label for="" class="mb-1">Full Name</label>
-                            <input type="text" class="form-control mb-3" v-model="editForm.name" required>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">First Name</label>
+                                    <input type="text" class="form-control mb-3" v-model="editForm.firstname" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">Middle Name</label>
+                                    <input type="text" class="form-control mb-3" v-model="editForm.middlename">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">Last Name</label>
+                                    <input type="text" class="form-control mb-3" v-model="editForm.lastname" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="" class="mb-1">Suffix</label>
+                                    <input type="text" class="form-control mb-3" v-model="editForm.suffix">
+                                </div>
+                            </div>
 
-                            <label for="" class="mb-1">Position</label>
-                            <input type="text" class="form-control mb-3" v-model="editForm.position" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="" class="mb-1">Position</label>
+                                    <select name="" id="" class="form-select mb-3" v-model="editForm.position"required>
+                                        <option value="STMG Enforcer">STMG Enforcer</option>
+                                        <option value="Traffic Enforcer">Traffic Enforcer</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="" class="mb-1">Contact Number</label>
+                                    <input type="number" class="form-control mb-3" v-model="editForm.contactNumber" required>
+                                </div>
+                            </div>
 
-                            <label for="" class="mb-1">Contact Number</label>
-                            <input type="number" class="form-control mb-3" v-model="editForm.contactNumber" required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="region" class="mb-1">Region</label>
+                                    <select class="form-select mb-3" v-model="editForm.region" @change="fetchProvincesForEdit(editForm.region)" required>
+                                        <option value="" disabled>Select a Region</option>
+                                        <option v-for="region in regions" :key="region.regCode" :value="region.regCode">
+                                            {{ region.regDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="province" class="mb-1">Province</label>
+                                    <select class="form-select mb-3" v-model="editForm.province" @change="fetchMunicipalsForEdit(editForm.province)" required>
+                                        <option value="" disabled>Select a Province</option>
+                                        <option v-for="province in provinces" :key="province.provCode" :value="province.provCode">
+                                            {{ province.provDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="municipal" class="mb-1">Municipal</label>
+                                    <select class="form-select mb-3" v-model="editForm.municipal" @change="fetchBarangaysForEdit(editForm.municipal)" required>
+                                        <option value="" disabled>Select a Municipal</option>
+                                        <option v-for="municipal in municipals" :key="municipal.citymunCode" :value="municipal.citymunCode">
+                                            {{ municipal.citymunDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="barangay" class="mb-1">Barangay</label>
+                                    <select class="form-select mb-3" v-model="editForm.barangay" required>
+                                        <option value="" disabled>Select a Barangay</option>
+                                        <option v-for="barangay in barangays" :key="barangay.brgyCode" :value="barangay.brgyCode">
+                                            {{ barangay.brgyDesc }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
 
-                            <label for="" class="mb-1">Address</label>
-                            <input type="text" class="form-control mb-3" v-model="editForm.address" required>
 
                             <label for="" class="mb-1">Email</label>
                             <input type="email" class="form-control mb-3" v-model="editForm.email" required>
@@ -271,16 +533,26 @@ const deleteStaff = (id) => {
                                             <tr v-for="(st, index) in staff" :key="st.id">
                                                 <td>{{ index + 1 }}</td>
                                                 <td>
-                                                    {{ st.name }}
+                                                    {{ st.firstname }} {{ st.middlename }} {{ st.lastname }} {{ st.suffix ? `. ${st.suffix}` : '' }}
                                                 </td>
                                                 <td>{{ st.position }}</td>
-                                                <td>{{ st.address }}</td>
+                                                <td>
+                                                    Brgy. {{ st.barangay != null ? st.barangay.brgyDesc : '' }}
+                                                    {{ st.municipal != null ? capitalizeWords(st.municipal.citymunDesc) : '' }} 
+                                                    {{ st.province != null ? capitalizeWords(st.province.provDesc) : '' }}
+                                                </td>
                                                 <td>
                                                     <a href="#" class="me-2" @click="editStaff(
                                                         st.id,
-                                                        st.name,
+                                                        st.firstname,
+                                                        st.middlename,
+                                                        st.lastname,
+                                                        st.suffix,
                                                         st.position,
-                                                        st.address,
+                                                        st.region.regCode,
+                                                        st.province.provCode,
+                                                        st.municipal.citymunCode,
+                                                        st.barangay.brgyCode,
                                                         st.contactNumber,
                                                         st.user.email
                                                     )"><i class="fa-solid fa-pencil"></i></a>

@@ -148,9 +148,9 @@ const deleteViolation = (id) => {
                             <label for="" class="mb-1">Violation Name</label>
                             <input type="text" class="form-control mb-3" v-model="createForm.violation" required>
 
-                            <label for="" class="mb-1">Violation Fee</label>
+                        <!--    <label for="" class="mb-1">Violation Fee</label>
                             <input type="number" class="form-control mb-3" step="0.01" min="1" v-model="createForm.fee"
-                                required>
+                                required> -->
 
                         </div>
                         <div class="modal-footer">
@@ -181,9 +181,9 @@ const deleteViolation = (id) => {
                             <label for="" class="mb-1">Violation Name</label>
                             <input type="text" class="form-control mb-3" v-model="editForm.violation" required>
 
-                            <label for="" class="mb-1">Violation Fee</label>
+                        <!--   <label for="" class="mb-1">Violation Fee</label>
                             <input type="number" class="form-control mb-3" step="0.01" min="1" v-model="editForm.fee"
-                                required>
+                                required> -->
 
                         </div>
                         <div class="modal-footer">
@@ -217,7 +217,7 @@ const deleteViolation = (id) => {
                                             <tr class="fs-6">
                                                 <th>No.</th>
                                                 <th>Violations</th>
-                                                <th>Violation Fee</th>
+                                            <!-- <th>Violation Fee</th> -->
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -225,7 +225,7 @@ const deleteViolation = (id) => {
                                             <tr v-for="(vl, index) in violation" :key="vl.id">
                                                 <td>{{ index + 1 }}</td>
                                                 <td>{{ vl.violation }}</td>
-                                                <td>₱ {{ formatNumber(vl.fee) }}</td>
+                                              <!--  <td>₱ {{ formatNumber(vl.fee) }}</td> -->
                                                 <td>
                                                     <a href="#" class="me-2" @click="editViolation(
                                                         vl.id,

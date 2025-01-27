@@ -41,6 +41,28 @@ onMounted(() => {
     searchForm.search = props.year
 });
 
+function capitalizeWords(text) {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// Function to format offense count
+function formatOffense(count) {
+    const suffixes = ['th', 'st', 'nd', 'rd'];
+    const mod = count % 100;
+    return count + (suffixes[(mod - 20) % 10] || suffixes[mod] || suffixes[0]) + ' Offense';
+}
+
+const isOverdue = (createdAt) => {
+    const ticketDate = new Date(createdAt);
+    const currentDate = new Date();
+    const timeDiff = currentDate - ticketDate; // Time difference in milliseconds
+    const daysDiff = timeDiff / (1000 * 60 * 60 * 24); // Convert milliseconds to days
+    return daysDiff >= 3;
+};
+
 </script>
 
 <template>
@@ -107,10 +129,11 @@ onMounted(() => {
                                             <tr class="fs-6">
                                                 <th>No.</th>
                                                 <th>Name</th>
+                                                <th>Address</th>
                                                 <th>Violation</th>
-                                                <th>Penalty</th>
+                                             <!-- <th>Penalty</th> -->
                                                 <th>Vehicle & Plate No.</th>
-                                                <th>ID</th>
+                                                <th>Driver's License</th>
                                                 <th>Ticketed By</th>
                                             </tr>
                                         </thead>
@@ -124,34 +147,86 @@ onMounted(() => {
                                                                 height="30"></iconify-icon>
                                                         </div>
                                                         <div class="mt-1 fw-bold">
-                                                            {{ tc.driverinfo.name }}
+                                                            {{ tc.driverinfo.firstname }} {{ tc.driverinfo.middlename }} {{ tc.driverinfo.lastname }} {{ tc.driverinfo.suffix }}
+                                                            <hr class="my-1">
+
+                                                            <div class="fw-normal text-danger" v-if="tc.status === 1"><span>
+                                                                <iconify-icon icon="zondicons:minus-solid" width="17" class="me-1"></iconify-icon> TO PAY</span>
+                                                            </div>
+                                                            <div class="fw-normal text-success" v-if="tc.status === 0">
+                                                                <div>
+                                                                    <iconify-icon icon="mingcute:check-2-fill" width="17" class="me-1"></iconify-icon> PAID
+                                                                </div>
+                                                                <small class="text-secondary fw-bold">
+                                                                    {{ formatDate(tc.datePaid) }}
+                                                                </small>
+                                                                <div class="text-secondary">
+                                                                    OR: {{ tc.ORnumber }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div v-if="isOverdue(tc.created_at) && tc.status === 1" class="toast fade show fw-bolder bg-danger mt-3" role="alert" aria-live="assertive" aria-atomic="true"
+                                                                data-bs-toggle="toast">
+                                                                <div class="toast-header d-block">
+                                                                    <div class="float-end">
+                                                                        <span class="text-dark">Ticket Overdue</span>
+                                                                        <button type="button" class="ms-2 btn-close" data-bs-dismiss="toast"
+                                                                            aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="auth-logo">
+                                                                        <iconify-icon icon="solar:danger-circle-bold-duotone" height="21" class="text-danger"></iconify-icon>
+                                                                        <span class="ms-2">Warning</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="toast-body fw-normal text-white">
+                                                                    This ticket is unpaid for over 3 days.
+                                                                </div>
+                                                            </div>
+
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                </td>
+                                                <td class="text-wrap">
+                                                    Brgy. {{ tc.driverinfo.barangay != null ? tc.driverinfo.barangay.brgyDesc : '' }}
+                                                    {{ tc.driverinfo.municipal != null ? capitalizeWords(tc.driverinfo.municipal.citymunDesc) : '' }} 
+                                                    {{ tc.driverinfo.province != null ? capitalizeWords(tc.driverinfo.province.provDesc) : '' }}
                                                 </td>
                                                 <td>
-                                                    <div v-for="(vl, index) in violation">
-                                                        <div v-if="vl.vehicleID === tc.id">
-                                                            <iconify-icon icon="lets-icons:road-finish-duotone"
-                                                                class="me-2 text-danger" width="20"
-                                                                height="20"></iconify-icon> {{ vl.violations.violation
-                                                            }} - ₱{{ formatNumber(vl.fee) }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="mt-2 text-muted fs-6">
+                                                    <table class="table table-bordered mb-1">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="p-1"><small>Violation</small></th>
+                                                                <th class="p-1"><small>Offense</small></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr v-for="(vl, index) in violation.filter(v => v.vehicleID === tc.id)"
+                                                                :key="index">
+                                                                <td class="p-1">
+                                                                    <iconify-icon icon="lets-icons:road-finish-duotone"
+                                                                        class="me-2 text-danger" width="20"
+                                                                        height="20"></iconify-icon>
+                                                                    <small>{{ vl.violations?.violation || 'Unknown Violation'
+                                                                    }}</small>
+                                                                </td>
+                                                                <td class="p-1"><small>{{ formatOffense(vl.offense || 0) }}</small></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <div class="text-danger fw-bold fs-6">
                                                         On: {{ formatDate(tc.created_at) }}
                                                     </div>
                                                 </td>
-                                                <td>
+                                              <!--  <td>
                                                     <div class="fs-5 fw-bold">₱ {{ formatNumber(tc.violationFee) }}
                                                     </div>
-                                                </td>
-                                                <td>
+                                                </td> -->
+                                                <td class="text-wrap">
                                                     <div>{{ tc.vehicle }}</div>
                                                     <div class="fw-bold">{{ tc.plateNumber }}</div>
                                                 </td>
                                                 <td>
-                                                    <p>{{ tc.IDtype }}</p>
-                                                    <p>{{ tc.IDnumber }}</p>
+                                                    <p>{{ tc.IDnumber != null ? tc.IDnumber : 'None' }}</p>
                                                 </td>
                                                 <td>
                                                     <span>{{ tc.ticketedBy }}</span>
@@ -181,7 +256,14 @@ var SweetAlert = Swal.mixin({
 });
 
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const options = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric', 
+        hour12: true
+    };
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', options);
 }

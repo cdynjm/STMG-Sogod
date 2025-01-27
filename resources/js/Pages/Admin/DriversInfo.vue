@@ -23,6 +23,20 @@ onMounted(() => {
     })
 });
 
+function capitalizeWords(text) {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// Function to format offense count
+function formatOffense(count) {
+    const suffixes = ['th', 'st', 'nd', 'rd'];
+    const mod = count % 100;
+    return count + (suffixes[(mod - 20) % 10] || suffixes[mod] || suffixes[0]) + ' Offense';
+}
+
 </script>
 
 <template>
@@ -65,16 +79,21 @@ onMounted(() => {
                                             <iconify-icon icon="pepicons-print:person-circle" width="30"
                                                 height="30"></iconify-icon>
                                         </span>
-                                        {{ driverInfo.name }}
+                                        {{ driverInfo.firstname }} {{ driverInfo.middlename }} {{ driverInfo.lastname }} {{ driverInfo.suffix }}
                                     </h6>
                                 </div>
                             </div>
 
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <p>Contact Number: {{ driverInfo.contactNumber }}</p>
-                                    <p>Address: {{ driverInfo.address }}</p>
-                                    <p>Age: {{ driverInfo.age }}</p>
+                                    <p>Address: 
+                                    
+                                        Brgy. {{ driverInfo.barangay != null ? driverInfo.barangay.brgyDesc : '' }}
+                                        {{ driverInfo.municipal != null ? capitalizeWords(driverInfo.municipal.citymunDesc) : '' }} 
+                                        {{ driverInfo.province != null ? capitalizeWords(driverInfo.province.provDesc) : '' }}
+                                    
+                                    </p>
+                                    <p>Birth Date: {{ formatShortDate(driverInfo.birthdate) }}</p>
                                     <p class="fw-bold mt-2"><iconify-icon icon="streamline:ticket-1-solid" class="me-2"
                                             width="18" height="18"></iconify-icon> Penalty Records History: </p>
                                 </div>
@@ -93,13 +112,26 @@ onMounted(() => {
                                         <address class="mt-3">
                                             {{ dv.location }}<br>
                                             <small>STATUS: </small>
-                                            <span class="text-success fw-bold" v-if="dv.status === 0">PAID</span>
+                                            <span class="text-success fw-bold" v-if="dv.status === 0">PAID
+                                            
+                                            <div>
+                                                <small class="text-secondary fw-normal">
+                                                    {{ formatDate(dv.datePaid) }}
+                                                </small>
+                                                <div class="text-secondary">
+                                                    OR: {{ dv.ORnumber }}
+                                                </div>
+                                            </div>
+
+                                            </span>
                                             <span class="text-danger fw-bold" v-if="dv.status === 1">UNPAID</span>
                                         </address>
                                     </div>
                                     <div class="float-sm-start">
                                         <h5 class="card-title mb-2">Penalty/Violation Ticket</h5>
-                                        <p>{{ formatDate(dv.created_at) }}</p>
+                                        <p class="text-info">{{ formatDate(dv.created_at) }}</p>
+
+                                        
                                     </div>
                                 </div>
 
@@ -107,8 +139,8 @@ onMounted(() => {
                                     <div class="col-md-6">
                                         <p class="mt-2">Type of Vehicle: <span class="fw-bold">{{ dv.vehicle }}</span></p>
                                         <p class="">Plate Number: <span class="fw-bold">{{ dv.plateNumber }}</span></p>
-                                        <p>ID Information: <span class="fw-bold">{{ dv.IDtype }} - {{ dv.IDnumber
-                                                }}</span></p>
+                                        <p>ID Information: <span class="fw-bold">Driver's License - {{ dv.IDnumber != null ? dv.IDnumber : 'None'}}</span>
+                                        </p>
                                     </div> <!-- end col -->
                                 </div>
                                 <!-- end row -->
@@ -120,14 +152,16 @@ onMounted(() => {
                                                 <thead class="bg-light bg-opacity-50">
                                                     <tr>
                                                         <th class="border-0 py-2">Violations</th>
-                                                        <th class="border-0 py-2">Fee</th>
+                                                        <th class="border-0 py-2">Offense</th>
                                                     </tr>
                                                 </thead> <!-- end thead -->
                                                 <tbody>
                                                     <tr v-for="(dvl, index) in driverViolation">
-                                                        <td v-if="dvl.vehicleID === dv.id">{{ dvl.violations.violation
-                                                            }}</td>
-                                                        <td v-if="dvl.vehicleID === dv.id">₱{{ formatNumber(dvl.fee) }}
+                                                        <td v-if="dvl.vehicleID === dv.id">
+                                                        {{ dvl.violations.violation }}
+                                                        </td>
+                                                        <td v-if="dvl.vehicleID === dv.id">
+                                                        {{ formatOffense(dvl.offense) }}
                                                         </td>
                                                     </tr>
                                                 </tbody> <!-- end tbody -->
@@ -145,8 +179,8 @@ onMounted(() => {
                                     </div>
                                     <div class="col-sm-5">
                                         <div class="float-end">
-                                            <span class="float-end">Total: <span class="fs-4 fw-bolder ms-2">₱ {{
-                                                    formatNumber(dv.violationFee) }}</span></span>
+                                         <!--   <span class="float-end">Total: <span class="fs-4 fw-bolder ms-2">₱ {{
+                                                    formatNumber(dv.violationFee) }}</span></span> -->
                                         </div>
                                         <div class="clearfix"></div>
                                     </div> <!-- end col -->
@@ -172,7 +206,14 @@ var SweetAlert = Swal.mixin({
 });
 
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const options = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric', 
+        hour12: true
+    };
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', options);
 }
@@ -180,5 +221,13 @@ function formatDate(dateString) {
 function formatNumber(value) {
     return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 }
+
+function formatShortDate(dateString) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', options);
+}
+
+
 
 </script>

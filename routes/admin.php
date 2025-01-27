@@ -10,6 +10,8 @@ use App\Http\Controllers\Pages\Admin\UnpaidController;
 use App\Http\Controllers\Pages\Admin\DriversController;
 use App\Http\Controllers\Pages\Admin\DriversInfoController;
 use App\Http\Controllers\Pages\Admin\TicketHistoryController;
+use App\Http\Controllers\Pages\Admin\ReceiptController;
+use App\Http\Controllers\Pages\Admin\ReceiptInfoController;
 
 Route::group(['middleware' => 'auth'], function () {
 
@@ -38,6 +40,16 @@ Route::group(['middleware' => 'auth'], function () {
 
 			Route::get('/ticket-history', [TicketHistoryController::class, 'ticketHistory'])->name('admin.ticket-history');
 			Route::get('/ticket-history/search', [TicketHistoryController::class, 'searchYear'])->name('admin.search-year');
+
+		//	Route::get('/receipt-info', [ReceiptInfoController::class, 'receiptInfo'])->name('receipt-info');
+		//	Route::patch('/update-receipt-info', [ReceiptInfoController::class, 'updateReceiptInfo'])->name('update-receipt-info');
+		//	Route::get('/receipt/{id}', [ReceiptController::class, 'receipt'])->name('admin.receipt');
+
+			Route::get('/regions', [StaffController::class, 'getRegions']);
+			Route::get('/provinces', [StaffController::class, 'getProvinces']);
+			Route::get('/municipals', [StaffController::class, 'getMunicipals']);
+			Route::get('/barangays', [StaffController::class, 'getBarangays']);
+
 
 		});
 

@@ -26,18 +26,32 @@ class DashboardController extends Controller
         $vehicle = DriverVehicle::with((new DriverVehicle)->relation)
             ->where('created_at', 'like', '%'.date('Y').'%')->get();
 
+        $driver = DriverInfo::where('created_at', 'like', '%'.date('Y').'%')->get();
+
         $violation = DriverViolation::with((new DriverViolation)->relation)
             ->where('created_at', 'like', '%'.date('Y').'%')->get();
 
         $violationList = Violations::get();
 
+        $violationCounts = $violationList->map(function ($vio) use ($violation) {
+            return [
+                'name' => $vio->violation, // Name of the violation
+                'count' => $violation->where('violation', $vio->id)->count() // Count of this violation
+            ];
+        });
+    
+        // Sort by count in descending order and take the top 10
+        $topViolations = $violationCounts->sortByDesc('count')->take(10)->values();
+
         return Inertia::render('Admin/Dashboard', [
             'unpaid' => $unpaid,
+            'topViolations' => $topViolations,
             'vehicleCount' => $vehicle->count(),
             'vehicle' => $vehicle,
             'violation' => $violation,
             'violationList' => $violationList,
             'auth' => Auth::user()->load(Auth::user()->relation),
+            'driver' => $driver,
             'year' => date('Y')
         ]);
     }
@@ -54,8 +68,20 @@ class DashboardController extends Controller
 
         $violationList = Violations::get();
 
+
+        $violationCounts = $violationList->map(function ($vio) use ($violation) {
+            return [
+                'name' => $vio->violation, // Name of the violation
+                'count' => $violation->where('violation', $vio->id)->count() // Count of this violation
+            ];
+        });
+    
+        // Sort by count in descending order and take the top 10
+        $topViolations = $violationCounts->sortByDesc('count')->take(10)->values();
+
         return Inertia::render('Admin/Dashboard', [
             'unpaid' => $unpaid,
+            'topViolations' => $topViolations,
             'vehicleCount' => $vehicle->count(),
             'vehicle' => $vehicle,
             'violation' => $violation,
